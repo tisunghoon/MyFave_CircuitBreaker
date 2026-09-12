@@ -1,0 +1,33 @@
+# 실습 전용 프로파일 — 자원 축소 + 빠졌던 메트릭 배선.
+# 실행: SPRING_PROFILES_ACTIVE=local,chaos ./gradlew bootRun
+#   local : DB/Redis/OAuth 등 실제 인프라 설정(application-local.yml)
+#   chaos : 아래 자원 축소 + 장애 주입 빈(@Profile("chaos")) 활성화
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10        # 원본 장애 풀 크기 10 — 빠른 포화 관측
+      pool-name: myfave-hikari
+
+server:
+  tomcat:
+    threads:
+      max: 20                      # 워커 스레드 상한. 결제가 다 먹으면 읽기 경로가 먼저 죽는다
+    mbeanregistry:
+      enabled: true                # tomcat_threads_busy_threads / _config_max_threads 노출
+
+# 장애 주입 스위치 기본값 (부하 중 ChaosController로 런타임 토글)
+chaos:
+  pg:
+    enabled: false                 # 시작은 정상. POST /internal/chaos/pg 로 ON
+    latency-ms: 8000               # 느린 성공 지연(ms) — 원본 8초
+    mode: SLOW200                  # SLOW200=느린 HTTP 200 / ERROR=예외
+
+# ── 빠졌던 모니터링 배선(핵심) ─────────────────────────────
+# _bucket 계열 메트릭은 히스토그램을 켜야 나온다. 안 켜면 4막 p99 쿼리가 빈값.
+management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        hikaricp.connections.usage: true       # 4막: 커넥션 점유 시간 p99 (이 사건의 신호)
+        hikaricp.connections.acquire: true     # 4막: 커넥션 대기 시간 p99
+        resilience4j.circuitbreaker.calls: true # 2막에서 r4j 추가 시 자동으로 _bucket 생성
