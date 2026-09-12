@@ -48,7 +48,8 @@ public class SecurityConfig {
                                 "/ws/**",
                                 "/payments/webhook",   // 외부 PG(PortOne) 콜백 - HMAC 서명으로 자체 보안
                                 "/actuator/health",
-                                "/actuator/prometheus" // Prometheus scraper 접근 허용
+                                "/actuator/prometheus", // Prometheus scraper 접근 허용
+                                "/internal/chaos/**"   // [DRILL] chaos 토글 — 브랜치 전용, main 금지
                         ).permitAll()
                         // 비로그인 공개 조회 (카탈로그·콘텐츠·이벤트)
                         // /chat-room, /chat-room/preview, /chat-room/messages 는 의도적으로 공개:
