@@ -2,6 +2,7 @@ package com.myfave.api.domain.payment.provider;
 
 import com.myfave.api.global.error.CustomException;
 import com.myfave.api.global.error.ErrorCode;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.netty.channel.ChannelOption;
@@ -44,6 +45,7 @@ public class PortOnePaymentProvider implements PaymentProvider {
     }
 
     @Override
+    @CircuitBreaker(name = "pgClient")   // [2막] 실 provider도 동일 서킷 공유 (운영 반영 대상)
     public PortOnePaymentInfo getPaymentInfo(String pgTransactionId) {
         return invokeWithMetrics("getPaymentInfo", () -> {
             log.debug("[PortOne] getPaymentInfo 호출: pgTxId={}", pgTransactionId);
