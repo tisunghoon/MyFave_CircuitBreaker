@@ -35,3 +35,16 @@ management:
         hikaricp.connections.usage: true       # 4막: 커넥션 점유 시간 p99 (이 사건의 신호)
         hikaricp.connections.acquire: true     # 4막: 커넥션 대기 시간 p99
         resilience4j.circuitbreaker.calls: true # 2막에서 r4j 추가 시 자동으로 _bucket 생성
+
+# [3막] 서킷 설정을 우리 SLO 기준으로 — 8초 느린 성공이 서킷을 열도록 임계 조정
+resilience4j:
+  circuitbreaker:
+    instances:
+      pgClient:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 30
+        minimumNumberOfCalls: 20        # 기본 100 → 우리 트래픽엔 너무 큼
+        failureRateThreshold: 50
+        slowCallDurationThreshold: 1s   # 기본 60s → SLO 기준으로 (8초는 느린 호출)
+        slowCallRateThreshold: 50       # 기본 100% → 절반만 느려도 연다
+        waitDurationInOpenState: 30s
