@@ -47,7 +47,8 @@ resilience4j:
         failureRateThreshold: 50
         slowCallDurationThreshold: 1s   # 기본 60s → SLO 기준으로 (8초는 느린 호출)
         slowCallRateThreshold: 50       # 기본 100% → 절반만 느려도 연다
-        waitDurationInOpenState: 30s    # (5막) 실제 대기엔 Resilience4jRecoveryConfig 지터가 우선 적용
+        # waitDurationInOpenState 는 5막 지터(Resilience4jRecoveryConfig.waitIntervalFunctionInOpenState)와
+        # 동시 설정 불가(Resilience4j 제약) → 여기선 생략하고 지터 IntervalFunction 으로 대체(30s ±50%)
   # [5막] 회복 직후 결제 경로 유량 제한 — 서킷 닫힌 순간 쌓였던 요청이 한꺼번에 몰리는 2차 부하 차단
   ratelimiter:
     instances:
