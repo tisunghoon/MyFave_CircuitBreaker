@@ -15,6 +15,10 @@ server:
     mbeanregistry:
       enabled: true                # tomcat_threads_busy_threads / _config_max_threads 노출
 
+# 드릴 편의 — 액세스 토큰 만료를 24시간으로 늘려 장시간 부하 중 토큰 만료(401)를 방지
+jwt:
+  access-token-expiry: 86400000   # 24h (기본 30분 → 드릴 중 재발급 불필요)
+
 # 장애 주입 스위치 기본값 (부하 중 ChaosController로 런타임 토글)
 chaos:
   pg:
