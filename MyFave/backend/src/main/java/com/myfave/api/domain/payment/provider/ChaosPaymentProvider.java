@@ -5,6 +5,7 @@ import com.myfave.api.domain.payment.repository.PaymentRepository;
 import com.myfave.api.global.chaos.ChaosProperties;
 import com.myfave.api.global.error.CustomException;
 import com.myfave.api.global.error.ErrorCode;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class ChaosPaymentProvider implements PaymentProvider {
     private final MeterRegistry meterRegistry;
 
     @Override
+    @CircuitBreaker(name = "pgClient")   // [2막] 기본값 서킷브레이커 — 활성 provider(chaos)에서 관측
     public PortOnePaymentInfo getPaymentInfo(String pgTransactionId) {
         return invokeWithMetrics("getPaymentInfo", () -> {
             injectLatencyOrError();
