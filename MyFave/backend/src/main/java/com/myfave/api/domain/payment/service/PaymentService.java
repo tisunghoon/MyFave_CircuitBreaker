@@ -182,7 +182,11 @@ public class PaymentService {
     public record ConfirmContext(Long paymentId, int totalPaymentPrice) {}
 
     // 2. 결제 승인 (오케스트레이터: 외부 호출은 트랜잭션 밖) ──────────────────────
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    // [DRILL 4막 안티패턴 — 브랜치 전용, main 금지]
+    // 원래는 Propagation.NOT_SUPPORTED 로 외부 PG 호출을 트랜잭션 밖에 두어 커넥션 점유를 막았다.
+    // 실습을 위해 @Transactional 로 되돌려, paymentProvider.getPaymentInfo(chaos 8초 sleep)가
+    // 열린 트랜잭션 안에서 HikariCP 커넥션을 8초간 점유하게 한다 → 풀10이면 동시 결제 10건에 풀 전멸.
+    @Transactional
     public PaymentResponse confirmPayment(Long userId, PaymentConfirmRequest request) {
         Timer.Sample sample = Timer.start(meterRegistry);
         String outcome = "failure";
