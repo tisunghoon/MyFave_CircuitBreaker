@@ -1,0 +1,161 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1789185146704,
+  "projectRoot": "/Users/chosunghoon/Desktop/GitHub/Organization/Techeer_Teamproject_D/MyFave_Monorepo",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "MyFave": {
+      "path": "MyFave",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1789185146645,
+      "keyFiles": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "MyFave_프로젝트_설계서.md",
+        "README.md",
+        "docker-compose.monitoring.yml"
+      ]
+    },
+    "MyFaveMornitoring": {
+      "path": "MyFaveMornitoring",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1789185146646,
+      "keyFiles": [
+        "README.md",
+        "docker-compose.yml"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/payment/controller/PaymentController.java",
+      "accessCount": 2,
+      "lastAccessed": 1789185466661,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/payment/service/PaymentService.java",
+      "accessCount": 2,
+      "lastAccessed": 1789185467283,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/payment/provider/PortOnePaymentProvider.java",
+      "accessCount": 2,
+      "lastAccessed": 1789185467405,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/resources/application.yml",
+      "accessCount": 2,
+      "lastAccessed": 1789185474469,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/docker-compose.yml",
+      "accessCount": 2,
+      "lastAccessed": 1789185477059,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/payment/entity/Payment.java",
+      "accessCount": 2,
+      "lastAccessed": 1789185480578,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/payment/provider/PaymentProvider.java",
+      "accessCount": 2,
+      "lastAccessed": 1789185480826,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/docker-compose.monitoring.yml",
+      "accessCount": 2,
+      "lastAccessed": 1789185563058,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/order/entity/Order.java",
+      "accessCount": 1,
+      "lastAccessed": 1789185451464,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/payment/provider/PAYMENT_PROVIDER_CONTEXT.md",
+      "accessCount": 1,
+      "lastAccessed": 1789185458028,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/global/error/ErrorCode.java",
+      "accessCount": 1,
+      "lastAccessed": 1789185461614,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/order/controller/OrderController.java",
+      "accessCount": 1,
+      "lastAccessed": 1789185470086,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/java/com/myfave/api/domain/order/service/OrderService.java",
+      "accessCount": 1,
+      "lastAccessed": 1789185470517,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/resources/application-local.yml",
+      "accessCount": 1,
+      "lastAccessed": 1789185474712,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/backend/src/main/resources/application-prod.yml",
+      "accessCount": 1,
+      "lastAccessed": 1789185474949,
+      "type": "file"
+    },
+    {
+      "path": "MyFaveMornitoring/docker-compose.yml",
+      "accessCount": 1,
+      "lastAccessed": 1789185477929,
+      "type": "file"
+    },
+    {
+      "path": "MyFave/observability/prometheus.yml",
+      "accessCount": 1,
+      "lastAccessed": 1789185483968,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

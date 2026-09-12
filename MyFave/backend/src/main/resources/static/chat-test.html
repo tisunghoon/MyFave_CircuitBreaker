@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket 채팅 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+        #log { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin: 10px 0; background: #f9f9f9; }
+        .msg { margin: 4px 0; }
+        .recv { color: #0066cc; }
+        .sent { color: #333; }
+        .system { color: #999; font-style: italic; }
+        input, button { padding: 8px; margin: 4px; }
+        #msgInput { width: 70%; }
+    </style>
+</head>
+<body>
+    <h2>채팅 테스트</h2>
+
+    <div>
+        <label>Room ID: <input id="roomId" type="number" value="1" style="width:60px"></label>
+        <button onclick="connect()">연결</button>
+        <button onclick="disconnect()">연결 해제</button>
+        <span id="status" style="color:red">● 연결 안됨</span>
+    </div>
+
+    <div id="log"></div>
+
+    <div>
+        <input id="msgInput" type="text" placeholder="메시지 입력..." onkeydown="if(event.key==='Enter') sendMsg()">
+        <button onclick="sendMsg()">전송</button>
+    </div>
+
+    <script>
+        var client = null;
+
+        function log(msg, type) {
+            var div = document.getElementById('log');
+            var p = document.createElement('p');
+            p.className = 'msg ' + (type || '');
+            p.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+            div.appendChild(p);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function connect() {
+            var roomId = document.getElementById('roomId').value;
+            var socket = new SockJS('http://localhost:8080/api/v1/ws');
+            client = Stomp.over(socket);
+            client.debug = null; // STOMP 디버그 로그 숨김
+
+            client.connect({}, function() {
+                document.getElementById('status').textContent = '● 연결됨';
+                document.getElementById('status').style.color = 'green';
+                log('STOMP 연결 성공', 'system');
+
+                client.subscribe('/topic/chat/' + roomId, function(msg) {
+                    var data = JSON.parse(msg.body);
+                    if (data.type === 'NEW_MESSAGE') {
+                        log('[' + data.payload.nickname + '] ' + data.payload.content, 'recv');
+                    } else if (data.type === 'PARTICIPANT_COUNT') {
+                        log('참가자 수: ' + data.payload.count + '명', 'system');
+                    } else {
+                        log('수신: ' + msg.body, 'recv');
+                    }
+                });
+
+            }, function(err) {
+                log('연결 실패: ' + err, 'system');
+                document.getElementById('status').textContent = '● 연결 실패';
+                document.getElementById('status').style.color = 'red';
+            });
+        }
+
+        function disconnect() {
+            if (client) {
+                client.disconnect(function() {
+                    log('연결 해제', 'system');
+                    document.getElementById('status').textContent = '● 연결 안됨';
+                    document.getElementById('status').style.color = 'red';
+                });
+            }
+        }
+
+        function sendMsg() {
+            var input = document.getElementById('msgInput');
+            var roomId = document.getElementById('roomId').value;
+            if (!client || !input.value.trim()) return;
+
+            client.send('/app/chat/' + roomId, {}, JSON.stringify({
+                type: 'SEND_MESSAGE',
+                payload: { content: input.value.trim() }
+            }));
+
+            log('전송: ' + input.value.trim(), 'sent');
+            input.value = '';
+        }
+    </script>
+</body>
+</html>

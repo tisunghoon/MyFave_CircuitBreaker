@@ -1,0 +1,77 @@
+services:
+  app:
+    container_name: myfave-app
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/myfave
+      SPRING_DATA_REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:-myfave-dev-secret-key-minimum-32-characters-long}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI}
+      TRACKER_CLIENT_ID: ${TRACKER_CLIENT_ID}
+      TRACKER_CLIENT_SECRET: ${TRACKER_CLIENT_SECRET}
+      PORTONE_API_SECRET: ${PORTONE_API_SECRET}
+      PORTONE_STORE_ID: ${PORTONE_STORE_ID}
+      PORTONE_CHANNEL_KEY_CARD: ${PORTONE_CHANNEL_KEY_CARD}
+      PORTONE_CHANNEL_KEY_KAKAOPAY: ${PORTONE_CHANNEL_KEY_KAKAOPAY}
+      PORTONE_CHANNEL_KEY_NAVERPAY: ${PORTONE_CHANNEL_KEY_NAVERPAY}
+      PORTONE_CHANNEL_KEY_TOSSPAY: ${PORTONE_CHANNEL_KEY_TOSSPAY}
+      OTEL_SERVICE_NAME: myfave-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_RESOURCE_ATTRIBUTES: service.name=myfave-api,deployment.environment=local
+      OTEL_LOGS_EXPORTER: none
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - myfave-network
+
+  postgres:
+    container_name: myfave-postgres
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: myfave
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - myfave-network
+
+  redis:
+    container_name: myfave-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - myfave-network
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  myfave-network:
+    driver: bridge

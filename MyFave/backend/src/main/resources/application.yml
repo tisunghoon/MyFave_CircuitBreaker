@@ -1,0 +1,97 @@
+spring:
+  profiles:
+    active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: validate # 테이블은 DDL SQL로 직접 생성. JPA는 검증만 수행
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+        # Round 0~3 비교용 — 라운드별 총 쿼리 수/페치 횟수 메트릭 노출
+        # (hibernate_statistics_query_executions_total 등). overhead 1~3%.
+        generate_statistics: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1 # 모든 API: /api/v1/users, /api/v1/products 등
+  # Nginx 리버스 프록시 뒤에서 X-Forwarded-Proto 헤더 인식 → Swagger UI가 https URL 생성하도록
+  forward-headers-strategy: framework
+
+# CORS 설정 (profile별 override: application-prod.yml)
+app:
+  cors:
+    allowed-origins: http://localhost:5173
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+# 인플루언서 설정 (서비스 운영 인플루언서 1명 고정)
+influencer:
+  user-id: 1
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET:local-dev-jwt-secret-key-must-be-at-least-256-bits-long-here}
+  access-token-expiry: 1800000 # 30분 (ms)
+  refresh-token-expiry: 1209600000 # 14일 (ms)
+
+# 포트원 결제 설정
+portone:
+  api-url: ${PORTONE_API_URL:https://api.portone.io}
+  api-secret: ${PORTONE_API_SECRET}
+  store-id: ${PORTONE_STORE_ID}
+  channel-key:
+    card: ${PORTONE_CHANNEL_KEY_CARD}
+    kakao-pay: ${PORTONE_CHANNEL_KEY_KAKAOPAY}
+    naver-pay: ${PORTONE_CHANNEL_KEY_NAVERPAY}
+    toss-pay: ${PORTONE_CHANNEL_KEY_TOSSPAY}
+
+# Delivery Tracker API (tracker.delivery)
+tracker:
+  client-id: ${TRACKER_CLIENT_ID}
+  client-secret: ${TRACKER_CLIENT_SECRET}
+  api-url: https://apis.tracker.delivery/graphql
+  timeout-seconds: 15
+
+# Observability - Actuator + Micrometer (모니터링)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    mail:
+      enabled: false
+
+  metrics:
+    tags:
+      application: ${spring.application.name:myfave-api}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        myfave.payment.confirm.duration: true
+        myfave.portone.call.duration: true
+        myfave.stock.lock.wait.duration: true
+      slo:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s, 2s
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: ${TEMPO_OTLP_ENDPOINT:http://localhost:4318/v1/traces}

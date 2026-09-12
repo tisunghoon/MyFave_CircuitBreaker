@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "entries": {
+    "445ed27a3872b681d98190bae61ccb84954e1bc4e140df5370be958dee776b3a": {
+      "last_emitted_at_ms": 1789185953914,
+      "message": "Verify changes work after editing. Test functionality before marking complete."
+    },
+    "23d1daf05980a4d5ef75322e2636b1c7457d6345ea68fb95d2b66df0be59cf42": {
+      "last_emitted_at_ms": 1789185453431,
+      "message": "Spawning agent: Explore (inherit) | Task: 프로젝트 구조 탐색"
+    },
+    "466399dafa2d20f60587180bad0a07358eb7f2bce724df0ff682f038ad33f5ad": {
+      "last_emitted_at_ms": 1789185440229,
+      "message": "Read multiple files in parallel when possible for faster analysis."
+    },
+    "79a93d4a2f8f50b95f852280616242fee1855dc99a3c75211917f55e72e95fae": {
+      "last_emitted_at_ms": 1789185427085,
+      "message": "Use parallel execution for independent tasks. Use run_in_background for long operations (npm install, builds, tests)."
+    },
+    "e1a62ffd9c13addf2c523ba6ef0a6450c601fa2a54544cb0874c485ae89c9cdc": {
+      "last_emitted_at_ms": 1789185424902,
+      "message": "Spawning agent: oh-my-claudecode:explore (inherit) | Task: 프로젝트 전체 구조 탐색"
+    }
+  },
+  "updated_at": "2026-09-12T04:05:53.914Z"
+}

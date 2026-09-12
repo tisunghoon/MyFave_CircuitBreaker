@@ -1,0 +1,82 @@
+groups:
+  # 결제·재고 데이터 불일치/금전 손실 직결 — 즉시 알람 대상 (critical)
+  - name: myfave.payment.critical
+    interval: 30s
+    rules:
+      - alert: PaymentAmountMismatch
+        expr: increase(myfave_payment_amount_mismatch_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          domain: payment
+        annotations:
+          summary: "결제 금액 불일치 감지"
+          description: "최근 5분간 서버 계산금액 ≠ PG 금액 발생. 보안/계산 버그 또는 외부 PG 응답 이상."
+
+      - alert: WebhookSignatureInvalid
+        expr: increase(myfave_payment_webhook_signature_invalid_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          domain: payment
+        annotations:
+          summary: "PortOne 웹훅 서명 검증 실패"
+          description: "공격 또는 PORTONE_API_SECRET 설정 오류 가능성. 즉시 조사."
+
+      - alert: StockRestoreFailed
+        expr: increase(myfave_payment_stock_restore_failed_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          domain: payment
+        annotations:
+          summary: "결제 취소 시 재고 복구 실패"
+          description: "PG 환불은 완료됐으나 재고가 복구되지 않음. 데이터 불일치 — 수동 복구 필요."
+
+      - alert: CompensationPersistFailed
+        expr: increase(myfave_payment_compensation_persist_failed_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          domain: payment
+        annotations:
+          summary: "결제 보상 트랜잭션 영속화 실패"
+          description: "PG 환불 + 재고 복구 모두 실패 후 보상 기록까지 실패. 즉시 수동 복구 큐 처리."
+
+  # 비정상은 아니나 가시화 필요한 이벤트 (warning)
+  - name: myfave.payment.warning
+    interval: 30s
+    rules:
+      - alert: PgAutoRefundOccurred
+        expr: increase(myfave_payment_pg_auto_refund_total[10m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          domain: payment
+        annotations:
+          summary: "PG 자동환불 발생"
+          description: "금액 불일치 또는 재고 차감 실패로 자동환불 진행. 빈도 추적 필요."
+
+      - alert: PaymentPendingBacklog
+        expr: myfave_payment_pending_gauge > 50
+        for: 10m
+        labels:
+          severity: warning
+          domain: payment
+        annotations:
+          summary: "PENDING 결제 적체"
+          description: "PENDING 결제 50건 이상 10분 지속. Reconciliation 스케줄러 또는 PG 응답 지연 의심."
+
+  # 재고 동시성 — 시나리오 D 부하테스트 중 모니터링 + 운영 데드락 감지
+  - name: myfave.stock
+    interval: 30s
+    rules:
+      - alert: StockDeadlockSpike
+        expr: rate(myfave_stock_deadlock_total[1m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          domain: stock
+        annotations:
+          summary: "재고 차감 데드락 급증"
+          description: "PESSIMISTIC_WRITE 락 경합으로 데드락 발생률 0.1/s 초과. 매진 경쟁 상품 또는 락 순서 위반 의심."

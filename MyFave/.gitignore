@@ -1,0 +1,39 @@
+# 환경변수 (실제 키 포함 — 절대 커밋 금지)
+.env
+document
+.obsidian
+.postman
+postman
+# Talk with AI (로컬 학습 및 내부 문서 — 커밋 금지)
+Talk with AI/
+
+# AI agent context files (local only)
+backend/src/main/java/com/myfave/api/domain/order/*CONTEXT.md
+backend/src/main/java/com/myfave/api/domain/order/**/*CONTEXT.md
+backend/src/main/java/com/myfave/api/domain/order/*FLOW.md
+backend/src/main/java/com/myfave/api/domain/order/**/*FLOW.md
+backend/src/main/java/com/myfave/api/domain/payment/*CONTEXT.md
+backend/src/main/java/com/myfave/api/domain/payment/**/*CONTEXT.md
+backend/src/main/java/com/myfave/api/domain/payment/*FLOW.md
+backend/src/main/java/com/myfave/api/domain/payment/**/*FLOW.md
+backend/load-test/*CONTEXT.md
+backend/load-test/**/*CONTEXT.md
+
+# IDE 설정
+.idea/
+
+# 개인 문서
+Sprint_계획서.md
+.claude\settings.local.json
+.claude
+docs
+docs
+!backend/load-test/docs/
+.claude/
+meetings/
+backend/run.bat
+.vercel
+.env*.local
+AGENTS.md
+.DS_Store
+.omc/

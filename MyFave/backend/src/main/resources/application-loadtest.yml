@@ -1,0 +1,102 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/myfave
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 50   # 부하 테스트 시 커넥션 풀 포화 관측용 (기본 10 → 50)
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        default_batch_fetch_size: 100
+        # 500ms 초과 쿼리만 SQL_SLOW 로거로 출력 — slow query 분포 + Loki LogQL 검색용
+        session.events.log.LOG_QUERIES_SLOWER_THAN_MS: 500
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # local 프로파일과 동일하게 외부 의존성은 더미 값으로 채움 (로컬 부하 테스트 한정)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: loadtest@example.com
+    password: loadtest-password
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: loadtest-kakao-client-id
+            client-secret: loadtest-kakao-client-secret
+            scope: profile_nickname, account_email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+  cloud:
+    aws:
+      s3:
+        bucket: loadtest-bucket
+      credentials:
+        access-key: loadtest-access-key
+        secret-key: loadtest-secret-key
+      region:
+        static: ap-northeast-2
+
+portone:
+  api-url: https://api.portone.io
+  api-secret: loadtest-portone-api-secret
+  store-id: loadtest-portone-store-id
+  channel-key:
+    card: loadtest-card-key
+    kakao-pay: loadtest-kakao-key
+    naver-pay: loadtest-naver-key
+    toss-pay: loadtest-toss-key
+
+tracker:
+  client-id: loadtest-client-id
+  client-secret: loadtest-client-secret
+
+# 부하 테스트 시드 — SeedDataLoadTestRunner가 이 값을 참조해 1회 시드 수행
+loadtest:
+  seed:
+    enabled: true            # false로 두면 이미 시드된 상태에서 백엔드 재기동 가능
+    user-count: 1000
+    chat-room-id: 1          # 시나리오 E에서 사용할 채팅방 ID
+    password-plain: Password123!
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true          # Grafana Tomcat Threads 패널 메트릭 수집
+    threads:
+      max: 400               # 시나리오 E의 1000 WS 세션 + HTTP 동시 처리 여유
+    max-connections: 2000
+
+# Observability — 부하 테스트용으로 prometheus 노출 + WS 메트릭(C 작업) 수집 활성화
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  metrics:
+    tags:
+      application: myfave-api-loadtest
+
+# Hibernate slow query 로깅 — Round별 비교 + slow query 분포 측정
+logging:
+  level:
+    org.hibernate.SQL_SLOW: INFO

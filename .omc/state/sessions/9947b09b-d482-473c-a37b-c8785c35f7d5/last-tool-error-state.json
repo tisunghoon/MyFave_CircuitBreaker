@@ -1,0 +1,7 @@
+{
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"/Users/chosunghoon/Desktop/GitHub/Organization/Techeer_Teamproject_D/MyFave_Monorepo/MyFave/backend/src/main/resources\"}",
+  "error": "EISDIR: illegal operation on a directory, read '/Users/chosunghoon/Desktop/GitHub/Organization/Techeer_Teamproject_D/MyFave_Monorepo/MyFave/backend/src/main/resources'",
+  "timestamp": "2026-09-12T03:57:50.734Z",
+  "retry_count": 1
+}

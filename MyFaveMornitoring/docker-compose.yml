@@ -1,0 +1,183 @@
+# 로컬 모니터링 + 부하테스트 스택
+# 사전 조건:
+#   .env 파일에 PROD_HOST=<서버 IP 또는 도메인> 설정 필요
+#
+# 기본 실행 (모니터링만):
+#   docker compose -f docker-compose.monitoring.yml up -d
+#
+# 부하테스트 실행 (scenario-a 기본):
+#   docker compose -f docker-compose.monitoring.yml --profile loadtest run --rm k6
+#
+# 다른 시나리오 실행 예시:
+#   docker compose -f docker-compose.monitoring.yml --profile loadtest run --rm k6 \
+#     run --out experimental-prometheus-rw /scripts/scenarios/scenario-d-soldout.js
+#
+# 프로덕션 OTEL 트레이스 수신 (선택):
+#   프로덕션 서버에서 아래 명령으로 역방향 SSH 터널 생성 후 모니터링 스택 기동
+#   ssh -R 4317:localhost:4317 -R 4318:localhost:4318 user@<PROD_HOST>
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: myfave-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--web.enable-remote-write-receiver"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - myfave-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+        reservations:
+          memory: 256m
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: myfave-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD must be set}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - myfave-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+        reservations:
+          memory: 128m
+
+  loki:
+    image: grafana/loki:latest
+    container_name: myfave-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - myfave-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+        reservations:
+          memory: 128m
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: myfave-promtail
+    # 원격 서버 세팅에서는 로컬 Docker 소켓에 대상 컨테이너가 없으므로 로그 수집 안 됨.
+    # 로컬에서 app 컨테이너까지 함께 띄울 때만 의미 있음.
+    volumes:
+      - ./observability/promtail.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - promtail-data:/var/lib/promtail
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - myfave-network
+    restart: unless-stopped
+    depends_on:
+      - loki
+    user: root
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+        reservations:
+          memory: 64m
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: myfave-tempo
+    ports:
+      - "3200:3200"
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/tmp/tempo
+    command: -config.file=/etc/tempo.yaml
+    networks:
+      - myfave-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+        reservations:
+          memory: 256m
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: myfave-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "${POSTGRES_EXPORTER_DSN}"
+    ports:
+      - "9187:9187"
+    networks:
+      - myfave-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+        reservations:
+          memory: 32m
+
+  k6:
+    image: grafana/k6:latest
+    container_name: myfave-k6
+    profiles: ["loadtest"]
+    volumes:
+      - ./backend/load-test/k6:/scripts
+    environment:
+      BASE_URL: https://${PROD_HOST}/api/v1
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
+    # 기본 시나리오: scenario-a (spike). 다른 시나리오는 run 명령에서 오버라이드
+    command: run --out experimental-prometheus-rw /scripts/scenarios/scenario-a-spike.js
+    networks:
+      - myfave-network
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+        reservations:
+          memory: 256m
+
+volumes:
+  grafana-data:
+  loki-data:
+  tempo-data:
+  promtail-data:
+
+networks:
+  myfave-network:
+    driver: bridge
