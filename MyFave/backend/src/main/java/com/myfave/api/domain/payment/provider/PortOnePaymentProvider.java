@@ -4,11 +4,15 @@ import com.myfave.api.global.error.CustomException;
 import com.myfave.api.global.error.ErrorCode;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.netty.channel.ChannelOption;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -26,9 +30,15 @@ public class PortOnePaymentProvider implements PaymentProvider {
             @Value("${portone.api-secret}") String apiSecret,
             MeterRegistry meterRegistry
     ) {
+        // [1막] connect/read 타임아웃 — 응답 없는 외부 호출에 스레드가 무한 대기하지 않도록 상한.
+        // connect 1s, read(responseTimeout) 3s. .block() 경로이므로 ReactorClientHttpConnector로 준다.
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
+                .responseTimeout(Duration.ofSeconds(3));
         this.webClient = builder
                 .baseUrl(apiUrl)
                 .defaultHeader("Authorization", "PortOne " + apiSecret)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
         this.meterRegistry = meterRegistry;
     }
