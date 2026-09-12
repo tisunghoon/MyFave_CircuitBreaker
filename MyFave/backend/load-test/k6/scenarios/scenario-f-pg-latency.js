@@ -46,7 +46,7 @@ export function payFlow() {
   const orderId = parseId(orderResp, 'orderId');
   if (!orderId) return;
 
-  const prepareResp = post('/payments/prepare', accessToken, { orderId });
+  const prepareResp = post('/payments/prepare', accessToken, { orderId, paymentMethod: 'CARD' });
   if (prepareResp.status !== 200 && prepareResp.status !== 201) { sleep(0.5); return; }
   const paymentId = parseId(prepareResp, 'paymentId');
   if (!paymentId) return;
